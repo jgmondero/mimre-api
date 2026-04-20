@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Mimre.Api/Mimre.Api.csproj" Id="af63a87f-6558-4506-99b2-51aac97ae240" />
+  <Project Path="Mimre.Application/Mimre.Application.csproj" />
+  <Project Path="Mimre.Domain/Mimre.Domain.csproj" />
+  <Project Path="Mimre.Infrastructure/Mimre.Infrastructure.csproj" />
+  <Project Path="Mimre.Worker/Mimre.Worker.csproj" />
+</Solution>
