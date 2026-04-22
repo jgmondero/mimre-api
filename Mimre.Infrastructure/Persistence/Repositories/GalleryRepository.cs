@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Mimre.Domain.Common;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Interfaces.Repositories;
+using Mimre.Infrastructure.Persistence.Extensions;
 
 namespace Mimre.Infrastructure.Persistence.Repositories;
 
@@ -16,11 +18,11 @@ public class GalleryRepository(MimreDbContext db) : IGalleryRepository
             .Include(g => g.Albums)
             .FirstOrDefaultAsync(g => g.UserId == userId && g.Slug == slug, ct);
 
-    public async Task<IReadOnlyList<Gallery>> GetByUserIdAsync(Guid userId, CancellationToken ct = default) =>
-        await db.Galleries
+    public Task<PagedResult<Gallery>> GetByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken ct = default) =>
+        db.Galleries
             .Where(g => g.UserId == userId)
             .OrderByDescending(g => g.CreatedOn)
-            .ToListAsync(ct);
+            .ToPagedResultAsync(page, pageSize, ct);
 
     public Task<bool> SlugExistsAsync(Guid userId, string slug, CancellationToken ct = default) =>
         db.Galleries.AnyAsync(g => g.UserId == userId && g.Slug == slug, ct);

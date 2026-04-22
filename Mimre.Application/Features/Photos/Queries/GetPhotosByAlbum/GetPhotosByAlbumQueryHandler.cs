@@ -1,19 +1,21 @@
 ﻿using MediatR;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
+using Mimre.Domain.Common;
 using Mimre.Domain.Interfaces.Services;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Mimre.Application.Features.Photos.Queries.GetPhotosByAlbum;
 
 public class GetPhotosByAlbumQueryHandler(IUnitOfWork uow, IBlobStorageService blob)
-    : IRequestHandler<GetPhotosByAlbumQuery, IReadOnlyList<PhotoDto>>
+    : IRequestHandler<GetPhotosByAlbumQuery, CursorResult<PhotoDto>>
 {
-    public async Task<IReadOnlyList<PhotoDto>> Handle(GetPhotosByAlbumQuery request, CancellationToken ct)
+    public async Task<CursorResult<PhotoDto>> Handle(GetPhotosByAlbumQuery request, CancellationToken ct)
     {
-        var photos = await uow.Photos.GetByAlbumIdAsync(request.AlbumId, ct);
+        var photos = await uow.Photos.GetByAlbumIdAsync(request.AlbumId, request.Cursor, request.PageSize, ct);
         var result = new List<PhotoDto>();
 
-        foreach (var photo in photos)
+        foreach (var photo in photos.Items)
         {
             // Thumbnails are public CDN URLs, originals are SAS-protected
             var thumbnailUrl = photo.ThumbnailBlobPath is not null
@@ -37,6 +39,11 @@ public class GetPhotosByAlbumQueryHandler(IUnitOfWork uow, IBlobStorageService b
                 photo.Status));
         }
 
-        return result;
+        return new CursorResult<PhotoDto>
+        {
+            Items = result,
+            NextCursor = photos.NextCursor,
+            PageSize = request.PageSize
+        };
     }
 }

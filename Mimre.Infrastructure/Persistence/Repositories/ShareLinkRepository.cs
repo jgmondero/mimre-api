@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Mimre.Domain.Common;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Interfaces.Repositories;
+using Mimre.Infrastructure.Persistence.Extensions;
 
 namespace Mimre.Infrastructure.Persistence.Repositories;
 
@@ -16,11 +18,11 @@ public class ShareLinkRepository(MimreDbContext db) : IShareLinkRepository
             .Include(s => s.Gallery)
             .FirstOrDefaultAsync(s => s.Token == token, ct);
 
-    public async Task<IReadOnlyList<ShareLink>> GetByGalleryIdAsync(Guid galleryId, CancellationToken ct = default) =>
-        await db.ShareLinks
+    public Task<PagedResult<ShareLink>> GetByGalleryIdAsync(Guid galleryId, int page, int pageSize, CancellationToken ct = default) =>
+        db.ShareLinks
             .Where(s => s.GalleryId == galleryId)
             .OrderByDescending(s => s.CreatedOn)
-            .ToListAsync(ct);
+            .ToPagedResultAsync(page, pageSize, ct);
 
     public void Add(ShareLink shareLink) => db.ShareLinks.Add(shareLink);
 

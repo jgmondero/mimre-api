@@ -17,9 +17,9 @@ public static class ShareLinkEndpoints
             .WithTags("ShareLinks")
             .RequireAuthorization();
 
-        group.MapGet("/gallery/{galleryId:guid}", async (Guid galleryId, ISender sender) =>
+        group.MapGet("/gallery/{galleryId:guid}", async (Guid galleryId, ISender sender, int page = 1, int pageSize = 20) =>
         {
-            var result = await sender.Send(new GetShareLinksByGalleryQuery(galleryId));
+            var result = await sender.Send(new GetShareLinksByGalleryQuery(galleryId, page, pageSize));
             return Results.Ok(result);
         });
 

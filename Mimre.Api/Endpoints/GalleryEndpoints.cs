@@ -18,9 +18,9 @@ public static class GalleryEndpoints
             .WithTags("Galleries")
             .RequireAuthorization();
 
-        group.MapGet("/", async (ISender sender, CurrentUserService currentUser) =>
+        group.MapGet("/", async (ISender sender, CurrentUserService currentUser, int page = 1, int pageSize = 20) =>
         {
-            var result = await sender.Send(new GetGalleriesQuery(currentUser.UserId));
+            var result = await sender.Send(new GetGalleriesQuery(currentUser.UserId, page, pageSize));
             return Results.Ok(result);
         });
 

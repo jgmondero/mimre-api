@@ -16,9 +16,9 @@ public static class PhotoEndpoints
             .WithTags("Photos")
             .RequireAuthorization();
 
-        group.MapGet("/album/{albumId:guid}", async (Guid albumId, ISender sender) =>
+        group.MapGet("/album/{albumId:guid}", async (Guid albumId, ISender sender, Guid? cursor = null, int pageSize = 30) =>
         {
-            var result = await sender.Send(new GetPhotosByAlbumQuery(albumId));
+            var result = await sender.Send(new GetPhotosByAlbumQuery(albumId, cursor, pageSize));
             return Results.Ok(result);
         });
 
