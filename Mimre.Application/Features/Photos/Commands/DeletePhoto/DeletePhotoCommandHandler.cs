@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
@@ -6,7 +7,7 @@ using Mimre.Domain.Interfaces.Services;
 
 namespace Mimre.Application.Features.Photos.Commands.DeletePhoto;
 
-public class DeletePhotoCommandHandler(IUnitOfWork uow, IBlobStorageService blob)
+public class DeletePhotoCommandHandler(IUnitOfWork uow, IBlobStorageService blob, ILogger<DeletePhotoCommandHandler> logger)
     : IRequestHandler<DeletePhotoCommand>
 {
     public async Task Handle(DeletePhotoCommand request, CancellationToken ct)
@@ -32,5 +33,7 @@ public class DeletePhotoCommandHandler(IUnitOfWork uow, IBlobStorageService blob
 
         uow.Photos.Remove(photo);
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Photo deleted. {PhotoId} {BlobPath}", photo.Id, photo.BlobPath);
     }
 }

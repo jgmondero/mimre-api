@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
 using Mimre.Domain.Entities;
@@ -6,7 +7,7 @@ using Mimre.Domain.Exceptions;
 
 namespace Mimre.Application.Features.ShareLinks.Queries.GetGalleryByToken;
 
-public class GetGalleryByTokenQueryHandler(IUnitOfWork uow)
+public class GetGalleryByTokenQueryHandler(IUnitOfWork uow, ILogger<GetGalleryByTokenQueryHandler> logger)
     : IRequestHandler<GetGalleryByTokenQuery, GalleryDto>
 {
     public async Task<GalleryDto> Handle(GetGalleryByTokenQuery request, CancellationToken ct)
@@ -19,6 +20,8 @@ public class GetGalleryByTokenQueryHandler(IUnitOfWork uow)
 
         link.IncrementView();
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Gallery accessed via share link. {Token} {GalleryId} ViewCount: {ViewCount}", request.Token, link.GalleryId, link.ViewCount);
 
         var g = link.Gallery;
         return new GalleryDto(

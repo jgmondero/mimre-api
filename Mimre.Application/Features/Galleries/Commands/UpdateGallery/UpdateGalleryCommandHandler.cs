@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Helpers;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
@@ -6,7 +7,7 @@ using Mimre.Domain.Exceptions;
 
 namespace Mimre.Application.Features.Galleries.Commands.UpdateGallery;
 
-public class UpdateGalleryCommandHandler(IUnitOfWork uow) : IRequestHandler<UpdateGalleryCommand>
+public class UpdateGalleryCommandHandler(IUnitOfWork uow, ILogger<UpdateGalleryCommandHandler> logger) : IRequestHandler<UpdateGalleryCommand>
 {
     public async Task Handle(UpdateGalleryCommand request, CancellationToken ct)
     {
@@ -31,5 +32,7 @@ public class UpdateGalleryCommandHandler(IUnitOfWork uow) : IRequestHandler<Upda
 
         gallery.UpdateTitle(request.Title);
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Gallery updated. {GalleryId} {UserId}", request.GalleryId, request.UserId);
     }
 }

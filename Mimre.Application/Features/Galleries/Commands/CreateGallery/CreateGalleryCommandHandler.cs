@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Helpers;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
@@ -7,7 +8,7 @@ using Mimre.Domain.Exceptions;
 
 namespace Mimre.Application.Features.Galleries.Commands.CreateGallery;
 
-public class CreateGalleryCommandHandler(IUnitOfWork uow) : IRequestHandler<CreateGalleryCommand, GalleryDto>
+public class CreateGalleryCommandHandler(IUnitOfWork uow, ILogger<CreateGalleryCommandHandler> logger) : IRequestHandler<CreateGalleryCommand, GalleryDto>
 {
     public async Task<GalleryDto> Handle(CreateGalleryCommand request, CancellationToken ct)
     {
@@ -18,6 +19,8 @@ public class CreateGalleryCommandHandler(IUnitOfWork uow) : IRequestHandler<Crea
         var gallery = Gallery.Create(request.UserId, request.Title, slug);
         uow.Galleries.Add(gallery);
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Gallery created. {GalleryId} {Slug} {UserId}", gallery.Id, gallery.Slug, request.UserId);
 
         return ToDto(gallery);
     }

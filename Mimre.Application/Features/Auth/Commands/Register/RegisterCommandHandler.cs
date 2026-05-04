@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
 using Mimre.Domain.Entities;
@@ -7,7 +8,7 @@ using Mimre.Domain.Interfaces.Services;
 
 namespace Mimre.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandHandler(IUnitOfWork uow, IPasswordHasher passwordHasher) : IRequestHandler<RegisterCommand, UserDto>
+public class RegisterCommandHandler(IUnitOfWork uow, IPasswordHasher passwordHasher, ILogger<RegisterCommandHandler> logger) : IRequestHandler<RegisterCommand, UserDto>
 {
     public async Task<UserDto> Handle(RegisterCommand request, CancellationToken ct)
     {
@@ -19,6 +20,8 @@ public class RegisterCommandHandler(IUnitOfWork uow, IPasswordHasher passwordHas
 
         uow.Users.Add(user);
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("User registered successfully. {UserId} {Email}", user.Id, user.Email);
 
         return new UserDto(user.Id, user.Email, user.FullName, user.PlanTier, user.StorageUsedBytes);
     }

@@ -1,11 +1,12 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
 
 namespace Mimre.Application.Features.Albums.Commands.UpdateAlbum;
 
-public class UpdateAlbumCommandHandler(IUnitOfWork uow) : IRequestHandler<UpdateAlbumCommand>
+public class UpdateAlbumCommandHandler(IUnitOfWork uow, ILogger<UpdateAlbumCommandHandler> logger) : IRequestHandler<UpdateAlbumCommand>
 {
     public async Task Handle(UpdateAlbumCommand request, CancellationToken ct)
     {
@@ -15,5 +16,7 @@ public class UpdateAlbumCommandHandler(IUnitOfWork uow) : IRequestHandler<Update
         album.Rename(request.Title);
         album.Reorder(request.SortOrder);
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Album updated. {AlbumId}", request.AlbumId);
     }
 }

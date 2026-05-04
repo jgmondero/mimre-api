@@ -1,11 +1,12 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
 
 namespace Mimre.Application.Features.Galleries.Commands.PublishGallery;
 
-public class PublishGalleryCommandHandler(IUnitOfWork uow) : IRequestHandler<PublishGalleryCommand>
+public class PublishGalleryCommandHandler(IUnitOfWork uow, ILogger<PublishGalleryCommandHandler> logger) : IRequestHandler<PublishGalleryCommand>
 {
     public async Task Handle(PublishGalleryCommand request, CancellationToken ct)
     {
@@ -19,5 +20,7 @@ public class PublishGalleryCommandHandler(IUnitOfWork uow) : IRequestHandler<Pub
         else gallery.Unpublish();
 
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Gallery {Action}. {GalleryId} {UserId}", request.Publish ? "published" : "unpublished", request.GalleryId, request.UserId);
     }
 }

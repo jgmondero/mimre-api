@@ -1,6 +1,8 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
+using Mimre.Application.Features.Auth.Commands.Register;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
 using Mimre.Domain.Interfaces.Services;
@@ -10,7 +12,8 @@ namespace Mimre.Application.Features.Photos.Commands.UploadPhoto;
 public class UploadPhotoCommandHandler(
     IUnitOfWork uow,
     IBlobStorageService blob,
-    IStorageQueueService queue)
+    IStorageQueueService queue,
+    ILogger<UploadPhotoCommandHandler> logger)
     : IRequestHandler<UploadPhotoCommand, PhotoDto>
 {
     public async Task<PhotoDto> Handle(UploadPhotoCommand request, CancellationToken ct)
@@ -44,6 +47,9 @@ public class UploadPhotoCommandHandler(
 
         // Enqueue for background processing (thumbnail + watermark)
         await queue.EnqueuePhotoProcessingAsync(photo.Id, ct);
+
+        logger.LogInformation("Photo uploaded. {PhotoId} {AlbumId} {FileName} {FileSizeBytes}", 
+            photo.Id, photo.AlbumId, photo.OriginalFileName, photo.FileSizeBytes);
 
         return new PhotoDto(photo.Id, photo.AlbumId, photo.OriginalFileName,
             ThumbnailUrl: string.Empty, WatermarkedUrl: null,

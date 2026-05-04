@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
@@ -9,11 +10,13 @@ namespace Mimre.Application.Features.Photos.Commands.ProcessPhoto;
 public class ProcessPhotoCommandHandler(
     IUnitOfWork uow,
     IBlobStorageService blob,
-    IImageProcessingService imageProcessor)
+    IImageProcessingService imageProcessor,
+    ILogger<ProcessPhotoCommandHandler> logger)
     : IRequestHandler<ProcessPhotoCommand>
 {
     public async Task Handle(ProcessPhotoCommand request, CancellationToken ct)
     {
+        logger.LogInformation("Processing photo {PhotoId}", request.PhotoId);
         var photo = await uow.Photos.GetByIdAsync(request.PhotoId, ct)
             ?? throw new NotFoundException(nameof(Photo), request.PhotoId);
 
@@ -43,9 +46,11 @@ public class ProcessPhotoCommandHandler(
             }
 
             photo.MarkReady(thumbPath, wmBlobPath, processed.Width, processed.Height);
+            logger.LogInformation("Photo processed successfully. {PhotoId} {ThumbnailPath}", photo.Id, photo.ThumbnailBlobPath);
         }
-        catch
+        catch(Exception ex)
         {
+            logger.LogError(ex, "Photo processing failed. {PhotoId} {BlobPath}", photo.Id, photo.BlobPath);
             photo.MarkFailed();
         }
         finally

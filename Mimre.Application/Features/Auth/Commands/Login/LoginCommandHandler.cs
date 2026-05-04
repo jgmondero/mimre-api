@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
 using Mimre.Domain.Exceptions;
@@ -6,7 +7,7 @@ using Mimre.Domain.Interfaces.Services;
 
 namespace Mimre.Application.Features.Auth.Commands.Login;
 
-public class LoginCommandHandler(IUnitOfWork uow, IPasswordHasher passwordHasher, ITokenService tokenService)
+public class LoginCommandHandler(IUnitOfWork uow, IPasswordHasher passwordHasher, ITokenService tokenService, ILogger<LoginCommandHandler> logger)
     : IRequestHandler<LoginCommand, LoginResult>
 {
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken ct)
@@ -20,6 +21,7 @@ public class LoginCommandHandler(IUnitOfWork uow, IPasswordHasher passwordHasher
         var accessToken = tokenService.GenerateAccessToken(user);
         var refreshToken = tokenService.GenerateRefreshToken();
 
+        logger.LogInformation("User logged in. {UserId} {Email}", user.Id, user.Email);
         var userDto = new UserDto(user.Id, user.Email, user.FullName, user.PlanTier, user.StorageUsedBytes);
         return new LoginResult(accessToken, refreshToken, userDto);
     }

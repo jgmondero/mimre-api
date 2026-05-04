@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Application.DTOs;
 using Mimre.Domain.Entities;
@@ -6,7 +7,7 @@ using Mimre.Domain.Exceptions;
 
 namespace Mimre.Application.Features.ShareLinks.Commands.CreateShareLink;
 
-public class CreateShareLinkCommandHandler(IUnitOfWork uow)
+public class CreateShareLinkCommandHandler(IUnitOfWork uow, ILogger<CreateShareLinkCommandHandler> logger)
     : IRequestHandler<CreateShareLinkCommand, ShareLinkDto>
 {
     public async Task<ShareLinkDto> Handle(CreateShareLinkCommand request, CancellationToken ct)
@@ -25,6 +26,8 @@ public class CreateShareLinkCommandHandler(IUnitOfWork uow)
 
         uow.ShareLinks.Add(link);
         await uow.SaveChangesAsync(ct);
+
+        logger.LogInformation("Share link created. {ShareLinkId} {GalleryId} {Token}", link.Id, link.GalleryId, link.Token);
 
         return new ShareLinkDto(
             link.Id,
