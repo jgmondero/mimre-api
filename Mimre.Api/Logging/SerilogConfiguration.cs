@@ -5,11 +5,12 @@ namespace Mimre.Api.Logging;
 
 public static class SerilogConfiguration
 {
-    public static void Configure(IHostEnvironment environment)
+    public static void Configure(IHostEnvironment environment, IConfiguration configuration)
     {
         var logPath = Path.Combine("logs", "mimre-api-.log");
 
         var config = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
