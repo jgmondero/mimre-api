@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application.DTOs;
 using Mimre.Application.Features.Photos.Commands.DeletePhoto;
@@ -14,7 +15,8 @@ public static class PhotoEndpoints
         var group = app
             .MapGroup("/api/photos")
             .WithTags("Photos")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicies.General);
 
         group.MapGet("/album/{albumId:guid}", async (Guid albumId, ISender sender, Guid? cursor = null, int pageSize = 30) =>
         {
@@ -53,7 +55,8 @@ public static class PhotoEndpoints
 
             return Results.Ok(results);
         })
-        .DisableAntiforgery(); // Required for multipart in Minimal APIs
+        .DisableAntiforgery() // Required for multipart in Minimal APIs
+        .RequireRateLimiting(RateLimitingPolicies.Upload);
 
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {

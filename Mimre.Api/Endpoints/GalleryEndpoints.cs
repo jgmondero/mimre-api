@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application.Features.Galleries.Commands.CreateGallery;
 using Mimre.Application.Features.Galleries.Commands.DeleteGallery;
@@ -16,7 +17,8 @@ public static class GalleryEndpoints
         var group = app
             .MapGroup("/api/galleries")
             .WithTags("Galleries")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicies.General);
 
         group.MapGet("/", async (ISender sender, CurrentUserService currentUser, int page = 1, int pageSize = 20) =>
         {

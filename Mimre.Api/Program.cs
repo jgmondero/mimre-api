@@ -13,6 +13,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using System.Text;
 using System.Text.Json;
+using Mimre.Api.RateLimiting;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
@@ -67,6 +68,7 @@ try
     {
         options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
+    builder.Services.AddMimreRateLimiting();
 
     // OpenAPI
     builder.Services.AddOpenApi();
@@ -109,6 +111,7 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseRateLimiter();
 
     // ── Endpoints ────────────────────────────────────────────────────────────────
 

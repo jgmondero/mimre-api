@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application.Features.ShareLinks.Commands.CreateShareLink;
 using Mimre.Application.Features.ShareLinks.Commands.DeleteShareLink;
@@ -15,7 +16,8 @@ public static class ShareLinkEndpoints
         var group = app
             .MapGroup("/api/share-links")
             .WithTags("ShareLinks")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicies.General);
 
         group.MapGet("/gallery/{galleryId:guid}", async (Guid galleryId, ISender sender, int page = 1, int pageSize = 20) =>
         {
@@ -40,6 +42,8 @@ public static class ShareLinkEndpoints
         {
             var result = await sender.Send(new GetGalleryByTokenQuery(token));
             return Results.Ok(result);
-        }).WithTags("Client");
+        })
+        .WithTags("Client")
+        .RequireRateLimiting(RateLimitingPolicies.Client);
     }
 }
