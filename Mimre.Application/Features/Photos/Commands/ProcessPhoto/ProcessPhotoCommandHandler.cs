@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using Mimre.Application.Common.Constants;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
@@ -11,6 +12,7 @@ public class ProcessPhotoCommandHandler(
     IUnitOfWork uow,
     IBlobStorageService blob,
     IImageProcessingService imageProcessor,
+    ICacheService cache,
     ILogger<ProcessPhotoCommandHandler> logger)
     : IRequestHandler<ProcessPhotoCommand>
 {
@@ -46,6 +48,7 @@ public class ProcessPhotoCommandHandler(
             }
 
             photo.MarkReady(thumbPath, wmBlobPath, processed.Width, processed.Height);
+            await cache.RemoveByPrefixAsync(CacheKeys.AlbumPhotosPrefix(photo.AlbumId), ct);
             logger.LogInformation("Photo processed successfully. {PhotoId} {ThumbnailPath}", photo.Id, photo.ThumbnailBlobPath);
         }
         catch(Exception ex)

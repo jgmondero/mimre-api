@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using Mimre.Application.Common.Constants;
 using Mimre.Application.Common.Interfaces;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Exceptions;
@@ -7,7 +8,7 @@ using Mimre.Domain.Interfaces.Services;
 
 namespace Mimre.Application.Features.Albums.Commands.DeleteAlbum;
 
-public class DeleteAlbumCommandHandler(IUnitOfWork uow, IBlobStorageService blob, ILogger<DeleteAlbumCommandHandler> logger)
+public class DeleteAlbumCommandHandler(IUnitOfWork uow, IBlobStorageService blob, ICacheService cache, ILogger<DeleteAlbumCommandHandler> logger)
     : IRequestHandler<DeleteAlbumCommand>
 {
     public async Task Handle(DeleteAlbumCommand request, CancellationToken ct)
@@ -29,6 +30,9 @@ public class DeleteAlbumCommandHandler(IUnitOfWork uow, IBlobStorageService blob
 
         uow.Albums.Remove(album);
         await uow.SaveChangesAsync(ct);
+
+        await cache.RemoveByPrefixAsync(CacheKeys.GalleryAlbumsPrefix(album.GalleryId), ct);
+        await cache.RemoveByPrefixAsync(CacheKeys.AlbumPhotosPrefix(request.AlbumId), ct);
 
         logger.LogInformation("Album deleted. {AlbumId} PhotoCount: {PhotoCount}", request.AlbumId, album.Photos.Count);
     }

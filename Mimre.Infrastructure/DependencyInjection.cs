@@ -6,10 +6,12 @@ using Mimre.Domain.Interfaces.Repositories;
 using Mimre.Domain.Interfaces.Services;
 using Mimre.Infrastructure.Auth;
 using Mimre.Infrastructure.BlobStorage;
+using Mimre.Infrastructure.Caching;
 using Mimre.Infrastructure.ImageProcessing;
 using Mimre.Infrastructure.Persistence;
 using Mimre.Infrastructure.Persistence.Repositories;
 using Mimre.Infrastructure.Queue;
+using Mimre.Application.Common.Settings;
 
 namespace Mimre.Infrastructure;
 
@@ -46,6 +48,30 @@ public static class DependencyInjection
         // Queue
         services.Configure<QueueSettings>(configuration.GetSection(nameof(QueueSettings)));
         services.AddScoped<IStorageQueueService, AzureStorageQueueService>();
+
+        // Caching
+        services.Configure<CacheSettings>(configuration.GetSection(nameof(CacheSettings)));
+
+        var cacheSettings = configuration
+            .GetSection(nameof(CacheSettings))
+            .Get<CacheSettings>() ?? new CacheSettings();
+
+        if (cacheSettings.UseRedis && !string.IsNullOrEmpty(cacheSettings.RedisConnectionString))
+        {
+            // Production — Redis distributed cache
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = cacheSettings.RedisConnectionString;
+                options.InstanceName = "mimre:";
+            });
+            services.AddScoped<ICacheService, CacheService>();
+        }
+        else
+        {
+            // Development — in-memory cache
+            services.AddMemoryCache();
+            services.AddScoped<ICacheService, MemoryCacheService>();
+        }
 
         return services;
     }

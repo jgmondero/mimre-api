@@ -6,7 +6,19 @@ using Mimre.Worker.Logging;
 using Mimre.Worker.Workers;
 using Serilog;
 
-SerilogConfiguration.Configure(new HostingEnvironment { EnvironmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production" });
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production"}.json", optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+var environment = new HostingEnvironment
+{
+    EnvironmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production"
+};
+
+SerilogConfiguration.Configure(environment, configuration);
 
 
 try
