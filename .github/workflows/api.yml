@@ -24,7 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
@@ -37,6 +37,11 @@ jobs:
 
       - name: Publish
         run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ${{ env.PUBLISH_PATH }}
+
+      - name: Zip publish output
+        run: |
+          cd ${{ env.PUBLISH_PATH }}
+          zip -r ../app.zip .
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -51,11 +56,6 @@ jobs:
             --startup-project Mimre.Api/Mimre.Api.csproj \
             --connection "${{ secrets.SQL_CONNECTION_STRING }}"
 
-     - name: Zip publish output
-        run: |
-          cd ${{ env.PUBLISH_PATH }}
-          zip -r ../app.zip .
-
       - name: Deploy to Azure App Service
         uses: azure/cli@v2
         with:
@@ -64,7 +64,7 @@ jobs:
             az webapp deploy \
               --name mimre-api \
               --resource-group mimre-rg \
-              --src-path ${{ env.PUBLISH_PATH }} \
+              --src-path ./publish/app.zip \
               --type zip
 
       - name: Logout from Azure
