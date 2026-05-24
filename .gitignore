@@ -486,3 +486,6 @@ appsettings.Development.json
 
 # Azurite local storage emulator data
 .azurite/
+
+# Local scripts
+scripts/
