@@ -57,6 +57,7 @@ jobs:
           app-name: 'mimre-api'
           publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
           package: ${{ env.PUBLISH_PATH }}
+          os-type: 'Linux'
 
       - name: Logout from Azure
         run: az logout
