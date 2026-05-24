@@ -51,13 +51,21 @@ jobs:
             --startup-project Mimre.Api/Mimre.Api.csproj \
             --connection "${{ secrets.SQL_CONNECTION_STRING }}"
 
+     - name: Zip publish output
+        run: |
+          cd ${{ env.PUBLISH_PATH }}
+          zip -r ../app.zip .
+
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v3
+        uses: azure/cli@v2
         with:
-          app-name: 'mimre-api'
-          publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
-          package: ${{ env.PUBLISH_PATH }}
-          os-type: 'Linux'
+          azcliversion: latest
+          inlineScript: |
+            az webapp deploy \
+              --name mimre-api \
+              --resource-group mimre-rg \
+              --src-path ${{ env.PUBLISH_PATH }} \
+              --type zip
 
       - name: Logout from Azure
         run: az logout

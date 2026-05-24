@@ -43,13 +43,21 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+     - name: Zip publish output
+        run: |
+          cd ${{ env.PUBLISH_PATH }}
+          zip -r ../app.zip .
+
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'mimre-worker'
-          publish-profile: ${{ secrets.AZURE_WORKER_PUBLISH_PROFILE }}
-          package: ${{ env.PUBLISH_PATH }}
-          os-type: 'Linux'
+	uses: azure/cli@v2
+	with:
+	  azcliversion: latest
+	  inlineScript: |
+	    az webapp deploy \
+              --name mimre-worker \
+              --resource-group mimre-rg \
+              --src-path ${{ env.PUBLISH_PATH }} \
+              --type zip
 
       - name: Logout from Azure
         run: az logout
