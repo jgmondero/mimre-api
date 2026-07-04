@@ -1,0 +1,92 @@
+name: mimre
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mimre-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${SA_PASSWORD}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: mimre-azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --skipApiVersionCheck
+
+  redis:
+    image: redis:7-alpine
+    container_name: mimre-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Mimre.Api/Dockerfile
+    container_name: mimre-api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=MimreDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      BlobStorageSettings__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=${STORAGE_KEY};BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      BlobStorageSettings__CdnBaseUrl: "http://azurite:10000/devstoreaccount1"
+      QueueSettings__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=${STORAGE_KEY};QueueEndpoint=http://azurite:10001/devstoreaccount1;"
+      QueueSettings__PhotoProcessingQueue: "photo-processing"
+      CacheSettings__UseRedis: "true"
+      CacheSettings__RedisConnectionString: "redis:6379"
+      JwtSettings__Issuer: "mimre-api"
+      JwtSettings__Audience: "mimre-client"
+      JwtSettings__AccessTokenExpiryMinutes: "15"
+      JwtSettings__RefreshTokenExpiryDays: "7"
+      JwtSettings__SecretKey: "${JWT_SECRET}"
+      Serilog__MinimumLevel__Default: "Information"
+    depends_on:
+      - sqlserver
+      - azurite
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Mimre.Worker/Dockerfile
+    container_name: mimre-worker
+    environment:
+      DOTNET_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=MimreDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      BlobStorageSettings__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=${STORAGE_KEY};BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      QueueSettings__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=${STORAGE_KEY};QueueEndpoint=http://azurite:10001/devstoreaccount1;"
+      QueueSettings__PhotoProcessingQueue: "photo-processing"
+      CacheSettings__UseRedis: "true"
+      CacheSettings__RedisConnectionString: "redis:6379"
+      Serilog__MinimumLevel__Default: "Information"
+    depends_on:
+      - sqlserver
+      - azurite
+      - redis
+      - api
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  azurite_data:
+  redis_data:

@@ -1,0 +1,12 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/logs
+**/.azurite
+**/scripts
+**/*.user
+**/*.suo
+**/appsettings.Development.json

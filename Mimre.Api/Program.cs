@@ -5,15 +5,17 @@ using Microsoft.OpenApi;
 using Mimre.Api.Endpoints;
 using Mimre.Api.Logging;
 using Mimre.Api.Middleware;
+using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application;
 using Mimre.Infrastructure;
 using Mimre.Infrastructure.Auth;
+using Mimre.Infrastructure.Persistence;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Text;
 using System.Text.Json;
-using Mimre.Api.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
@@ -96,6 +98,28 @@ try
     // ── Pipeline ─────────────────────────────────────────────────────────────────
 
     var app = builder.Build();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var retries = 0;
+        const int maxRetries = 10;
+        while (retries < maxRetries)
+        {
+            try
+            {
+                var db = scope.ServiceProvider.GetRequiredService<MimreDbContext>();
+                await db.Database.MigrateAsync();
+                break;
+            }
+            catch (Exception ex)
+            {
+                retries++;
+                Log.Warning("Database not ready, retrying {Retry}/{Max}. Error: {Error}",
+                    retries, maxRetries, ex.Message);
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
+        }
+    }
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
