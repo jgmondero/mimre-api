@@ -31,9 +31,9 @@ public static class ShareLinkEndpoints
             return Results.Created($"/api/share-links/{result.Id}", result);
         });
 
-        group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
-            await sender.Send(new DeleteShareLinkCommand(id));
+            await sender.Send(new DeleteShareLinkCommand(id, currentUser.UserId));
             return Results.NoContent();
         });
 

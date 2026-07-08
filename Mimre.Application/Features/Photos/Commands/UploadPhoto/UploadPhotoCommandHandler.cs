@@ -16,10 +16,32 @@ public class UploadPhotoCommandHandler(
     ILogger<UploadPhotoCommandHandler> logger)
     : IRequestHandler<UploadPhotoCommand, PhotoDto>
 {
+    private static readonly string[] AllowedContentTypes =
+    [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/heic",
+        "image/heif"
+    ];
+
+    private const long MaxFileSizeBytes = 50 * 1024 * 1024; // 50MB
+
     public async Task<PhotoDto> Handle(UploadPhotoCommand request, CancellationToken ct)
     {
+        if (!AllowedContentTypes.Contains(request.ContentType.ToLowerInvariant()))
+            throw new DomainException($"File type '{request.ContentType}' is not supported. Allowed: JPEG, PNG, WebP, HEIC.");
+
+        if (request.FileSizeBytes > MaxFileSizeBytes)
+            throw new DomainException("File size exceeds the maximum allowed size of 50MB.");
+
         var album = await uow.Albums.GetByIdAsync(request.AlbumId, ct)
             ?? throw new NotFoundException(nameof(Album), request.AlbumId);
+
+        var gallery = await uow.Galleries.GetByIdAsync(album.GalleryId, ct);
+        if (gallery?.UserId != request.UserId)
+            throw new DomainException("Access denied.");
 
         var user = await uow.Users.GetByIdAsync(request.UserId, ct)
             ?? throw new NotFoundException(nameof(User), request.UserId);

@@ -30,15 +30,15 @@ public static class AlbumEndpoints
             return Results.Created($"/api/albums/{result.Id}", result);
         });
 
-        group.MapPut("/{id:guid}", async (Guid id, UpdateAlbumCommand command, ISender sender) =>
+        group.MapPut("/{id:guid}", async (Guid id, UpdateAlbumCommand command, ISender sender, CurrentUserService currentUser) =>
         {
-            await sender.Send(command with { AlbumId = id });
+            await sender.Send(command with { AlbumId = id, UserId = currentUser.UserId });
             return Results.NoContent();
         });
 
-        group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
-            await sender.Send(new DeleteAlbumCommand(id));
+            await sender.Send(new DeleteAlbumCommand(id, currentUser.UserId));
             return Results.NoContent();
         });
     }

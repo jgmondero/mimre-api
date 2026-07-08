@@ -16,6 +16,12 @@ public class DeleteAlbumCommandHandler(IUnitOfWork uow, IBlobStorageService blob
         var album = await uow.Albums.GetByIdAsync(request.AlbumId, ct)
             ?? throw new NotFoundException(nameof(Album), request.AlbumId);
 
+        var gallery = await uow.Galleries.GetByIdAsync(album.GalleryId, ct)
+            ?? throw new NotFoundException(nameof(Gallery), album.GalleryId);
+
+        if (gallery?.UserId != request.UserId)
+            throw new DomainException("Access denied.");
+
         // Delete all associated blobs before removing DB records
         foreach (var photo in album.Photos)
         {

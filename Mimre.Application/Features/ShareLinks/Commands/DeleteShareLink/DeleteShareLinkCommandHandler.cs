@@ -13,6 +13,12 @@ public class DeleteShareLinkCommandHandler(IUnitOfWork uow, ILogger<DeleteShareL
         var link = await uow.ShareLinks.GetByIdAsync(request.ShareLinkId, ct)
             ?? throw new NotFoundException(nameof(ShareLink), request.ShareLinkId);
 
+        var gallery = await uow.Galleries.GetByIdAsync(link.GalleryId, ct)
+            ?? throw new NotFoundException(nameof(Gallery), link.GalleryId);
+
+        if (gallery?.UserId != request.UserId)
+            throw new UnauthorizedAccessException("Access denied.");
+
         uow.ShareLinks.Remove(link);
         await uow.SaveChangesAsync(ct);
 

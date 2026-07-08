@@ -16,6 +16,9 @@ public class DeletePhotoCommandHandler(IUnitOfWork uow, IBlobStorageService blob
         var photo = await uow.Photos.GetByIdAsync(request.PhotoId, ct)
             ?? throw new NotFoundException(nameof(Photo), request.PhotoId);
 
+        if (photo.Album.Gallery.UserId != request.UserId)
+            throw new DomainException("Access denied.");
+
         // Remove all blob variants
         await blob.DeleteAsync(photo.BlobPath, ct);
 

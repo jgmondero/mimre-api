@@ -25,12 +25,19 @@ public class GetGalleryByTokenQueryHandler(IUnitOfWork uow, ICacheService cache,
             ?? throw new NotFoundException(nameof(ShareLink), request.Token);
 
         if (link.IsExpired())
+        {
+            logger.LogWarning("Expired share link accessed. {Token}", request.Token);
             throw new DomainException("This share link has expired.");
+        }
+
+        if (!link.Gallery.IsPublished)
+        {
+            logger.LogWarning("Unpublished gallery accessed via share link. {Token} {GalleryId}", request.Token, link.GalleryId);
+            throw new DomainException("This gallery is not currently available.");
+        }
 
         link.IncrementView();
         await uow.SaveChangesAsync(ct);
-
-        logger.LogInformation("Gallery accessed via share link. {Token} {GalleryId} ViewCount: {ViewCount}", request.Token, link.GalleryId, link.ViewCount);
 
         var g = link.Gallery;
         var result = new GalleryDto(
@@ -50,6 +57,8 @@ public class GetGalleryByTokenQueryHandler(IUnitOfWork uow, ICacheService cache,
             result,
             TimeSpan.FromMinutes(cacheSettings.Value.GalleryTokenExpiryMinutes),
             ct);
+
+        logger.LogInformation("Gallery accessed via share link. {Token} {GalleryId} ViewCount: {ViewCount}", request.Token, link.GalleryId, link.ViewCount);
 
         return result;
     }

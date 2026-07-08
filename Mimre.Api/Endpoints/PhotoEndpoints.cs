@@ -58,9 +58,9 @@ public static class PhotoEndpoints
         .DisableAntiforgery() // Required for multipart in Minimal APIs
         .RequireRateLimiting(RateLimitingPolicies.Upload);
 
-        group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
-            await sender.Send(new DeletePhotoCommand(id));
+            await sender.Send(new DeletePhotoCommand(id, currentUser.UserId));
             return Results.NoContent();
         });
     }
