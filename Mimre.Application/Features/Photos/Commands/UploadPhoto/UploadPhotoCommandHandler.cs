@@ -30,12 +30,6 @@ public class UploadPhotoCommandHandler(
 
     public async Task<PhotoDto> Handle(UploadPhotoCommand request, CancellationToken ct)
     {
-        if (!AllowedContentTypes.Contains(request.ContentType.ToLowerInvariant()))
-            throw new DomainException($"File type '{request.ContentType}' is not supported. Allowed: JPEG, PNG, WebP, HEIC.");
-
-        if (request.FileSizeBytes > MaxFileSizeBytes)
-            throw new DomainException("File size exceeds the maximum allowed size of 50MB.");
-
         var album = await uow.Albums.GetByIdAsync(request.AlbumId, ct)
             ?? throw new NotFoundException(nameof(Album), request.AlbumId);
 
