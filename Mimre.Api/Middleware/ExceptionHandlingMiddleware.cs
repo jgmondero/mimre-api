@@ -5,10 +5,16 @@ using System.Text.Json;
 
 namespace Mimre.Api.Middleware;
 
-public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IHostEnvironment environment)
 {
     public async Task InvokeAsync(HttpContext context)
     {
+        if (context.Request.Path.StartsWithSegments("/openapi"))
+        {
+            await next(context);
+            return;
+        }
+
         try
         {
             await next(context);
@@ -20,11 +26,11 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
                 context.Request.Path,
                 ex.GetType().Name,
                 ex.Message);
-            await HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context, ex, environment.IsDevelopment());
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
     {
         var (statusCode, title, errors) = exception switch
         {
@@ -49,12 +55,20 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
                 (IReadOnlyDictionary<string, string[]>?)null)
         };
 
-        var response = new
-        {
-            title,
-            status = (int)statusCode,
-            errors
-        };
+        var response = isDevelopment ?
+            (object)new
+            {
+                title,
+                status = (int)statusCode,
+                errors,
+                detail = exception.ToString()
+            } :
+            new
+            {
+                title,
+                status = (int)statusCode,
+                errors
+            };
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
