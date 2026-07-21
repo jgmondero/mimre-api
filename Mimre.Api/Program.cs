@@ -144,6 +144,7 @@ try
     app.MapAlbumEndpoints();
     app.MapPhotoEndpoints();
     app.MapShareLinkEndpoints();
+    app.MapUserEndpoints();
 
     app.Run();
 }

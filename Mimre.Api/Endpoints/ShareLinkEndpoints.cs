@@ -3,6 +3,7 @@ using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application.Features.ShareLinks.Commands.CreateShareLink;
 using Mimre.Application.Features.ShareLinks.Commands.DeleteShareLink;
+using Mimre.Application.Features.ShareLinks.Commands.VerifyGalleryPassword;
 using Mimre.Application.Features.ShareLinks.Queries.GetGalleryByToken;
 using Mimre.Application.Features.ShareLinks.Queries.GetShareLinksByGallery;
 
@@ -30,6 +31,15 @@ public static class ShareLinkEndpoints
             var result = await sender.Send(command with { UserId = currentUser.UserId });
             return Results.Created($"/api/share-links/{result.Id}", result);
         });
+
+        app.MapPost("/api/client/{token}/verify", async (string token, VerifyGalleryPasswordCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command with { Token = token });
+            return result ? Results.Ok() : Results.Unauthorized();
+        })
+        .WithTags("Client")
+        .WithName("VerifyGalleryPassword")
+        .WithSummary("Verify a gallery password for client access");
 
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {

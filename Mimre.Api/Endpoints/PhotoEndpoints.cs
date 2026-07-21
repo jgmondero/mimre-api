@@ -3,6 +3,7 @@ using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application.DTOs;
 using Mimre.Application.Features.Photos.Commands.DeletePhoto;
+using Mimre.Application.Features.Photos.Commands.SetCoverPhoto;
 using Mimre.Application.Features.Photos.Commands.UploadPhoto;
 using Mimre.Application.Features.Photos.Queries.GetPhotosByAlbum;
 
@@ -63,5 +64,13 @@ public static class PhotoEndpoints
             await sender.Send(new DeletePhotoCommand(id, currentUser.UserId));
             return Results.NoContent();
         });
+
+        group.MapPatch("/{id:guid}/set-cover", async (Guid id, ISender sender, CurrentUserService currentUser) =>
+        {
+            await sender.Send(new SetCoverPhotoCommand(id, currentUser.UserId));
+            return Results.NoContent();
+        })
+        .WithName("SetCoverPhoto")
+        .WithSummary("Set a photo as the gallery cover");
     }
 }

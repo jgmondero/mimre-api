@@ -4,8 +4,10 @@ using Mimre.Api.Services;
 using Mimre.Application.Features.Galleries.Commands.CreateGallery;
 using Mimre.Application.Features.Galleries.Commands.DeleteGallery;
 using Mimre.Application.Features.Galleries.Commands.PublishGallery;
+using Mimre.Application.Features.Galleries.Commands.SetGalleryPassword;
 using Mimre.Application.Features.Galleries.Commands.UpdateGallery;
 using Mimre.Application.Features.Galleries.Queries.GetGalleries;
+using Mimre.Application.Features.Galleries.Queries.GetGalleryById;
 using Mimre.Application.Features.Galleries.Queries.GetGalleryBySlug;
 
 namespace Mimre.Api.Endpoints;
@@ -31,6 +33,14 @@ public static class GalleryEndpoints
             var result = await sender.Send(new GetGalleryBySlugQuery(currentUser.UserId, slug));
             return Results.Ok(result);
         });
+
+        group.MapGet("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
+        {
+            var result = await sender.Send(new GetGalleryByIdQuery(id, currentUser.UserId));
+            return Results.Ok(result);
+        })
+        .WithName("GetGalleryById")
+        .WithSummary("Get a gallery by ID");
 
         group.MapPost("/", async (CreateGalleryCommand command, ISender sender, CurrentUserService currentUser) =>
         {
@@ -61,5 +71,13 @@ public static class GalleryEndpoints
             await sender.Send(new PublishGalleryCommand(id, currentUser.UserId, Publish: false));
             return Results.NoContent();
         });
+
+        group.MapPatch("/{id:guid}/password", async (Guid id, SetGalleryPasswordCommand command, ISender sender, CurrentUserService currentUser) =>
+        {
+            await sender.Send(command with { GalleryId = id, UserId = currentUser.UserId });
+            return Results.NoContent();
+        })
+        .WithName("SetGalleryPassword")
+        .WithSummary("Set or remove a gallery password");
     }
 }
