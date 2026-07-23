@@ -23,7 +23,9 @@ public static class PhotoEndpoints
         {
             var result = await sender.Send(new GetPhotosByAlbumQuery(albumId, cursor, pageSize));
             return Results.Ok(result);
-        });
+        })
+        .WithName("GetPhotosByAlbum")
+        .WithSummary("Get photos for an album with cursor-based pagination");
 
         // Multipart file upload
         group.MapPost("/upload/{albumId:guid}", async (
@@ -57,13 +59,17 @@ public static class PhotoEndpoints
             return Results.Ok(results);
         })
         .DisableAntiforgery() // Required for multipart in Minimal APIs
-        .RequireRateLimiting(RateLimitingPolicies.Upload);
+        .RequireRateLimiting(RateLimitingPolicies.Upload)
+        .WithName("UploadPhotos")
+        .WithSummary("Upload one or more photos to an album");
 
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
             await sender.Send(new DeletePhotoCommand(id, currentUser.UserId));
             return Results.NoContent();
-        });
+        })
+        .WithName("DeletePhoto")
+        .WithSummary("Delete a photo and its blob storage variants");
 
         group.MapPatch("/{id:guid}/set-cover", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {

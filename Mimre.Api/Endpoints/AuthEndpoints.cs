@@ -18,7 +18,10 @@ public static class AuthEndpoints
         {
             var result = await sender.Send(command);
             return Results.Created($"/api/users/{result.Id}", result);
-        });
+        })
+        .WithName("Register")
+        .WithSummary("Register a new photographer account")
+        .AllowAnonymous();
 
         group.MapPost("/login", async (LoginCommand command, ISender sender) =>
         {
@@ -30,6 +33,9 @@ public static class AuthEndpoints
                 accessToken = result.AccessToken,
                 user = result.User
             });
-        });
+        })
+        .WithName("Login")
+        .WithSummary("Login and receive an access token")
+        .AllowAnonymous();
     }
 }

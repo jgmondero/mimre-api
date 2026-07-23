@@ -26,13 +26,17 @@ public static class GalleryEndpoints
         {
             var result = await sender.Send(new GetGalleriesQuery(currentUser.UserId, page, pageSize));
             return Results.Ok(result);
-        });
+        })
+        .WithName("GetGalleries")
+        .WithSummary("Get all galleries for the authenticated user");
 
         group.MapGet("/{slug}", async (string slug, ISender sender, CurrentUserService currentUser) =>
         {
             var result = await sender.Send(new GetGalleryBySlugQuery(currentUser.UserId, slug));
             return Results.Ok(result);
-        });
+        })
+        .WithName("GetGalleryBySlug")
+        .WithSummary("Get a gallery by its slug");
 
         group.MapGet("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
@@ -46,31 +50,41 @@ public static class GalleryEndpoints
         {
             var result = await sender.Send(command with { UserId = currentUser.UserId });
             return Results.Created($"/api/galleries/{result.Slug}", result);
-        });
+        })
+        .WithName("CreateGallery")
+        .WithSummary("Create a new gallery");
 
         group.MapPut("/{id:guid}", async (Guid id, UpdateGalleryCommand command, ISender sender, CurrentUserService currentUser) =>
         {
             await sender.Send(command with { GalleryId = id, UserId = currentUser.UserId });
             return Results.NoContent();
-        });
+        })
+        .WithName("UpdateGallery")
+        .WithSummary("Update a gallery title");
 
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
             await sender.Send(new DeleteGalleryCommand(id, currentUser.UserId));
             return Results.NoContent();
-        });
+        })
+        .WithName("DeleteGallery")
+        .WithSummary("Delete a gallery and all its contents");
 
         group.MapPost("/{id:guid}/publish", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
             await sender.Send(new PublishGalleryCommand(id, currentUser.UserId, Publish: true));
             return Results.NoContent();
-        });
+        })
+        .WithName("PublishGallery")
+        .WithSummary("Publish a gallery making it accessible to clients");
 
         group.MapPost("/{id:guid}/unpublish", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
             await sender.Send(new PublishGalleryCommand(id, currentUser.UserId, Publish: false));
             return Results.NoContent();
-        });
+        })
+        .WithName("UnpublishGallery")
+        .WithSummary("Unpublish a gallery");
 
         group.MapPatch("/{id:guid}/password", async (Guid id, SetGalleryPasswordCommand command, ISender sender, CurrentUserService currentUser) =>
         {

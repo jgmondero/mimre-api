@@ -73,13 +73,51 @@ try
     builder.Services.AddMimreRateLimiting();
 
     // OpenAPI
-    builder.Services.AddOpenApi();
     builder.Services.AddOpenApi(options =>
     {
+        options.AddDocumentTransformer((document, context, ct) =>
+        {
+            document.Info = new()
+            {
+                Title = "Mimre API",
+                Version = "v1",
+                Description = """
+                Mimre is an online photo gallery platform for photographers.
+                
+                ## Authentication
+                Most endpoints require a Bearer token obtained from `POST /api/auth/login`.
+                Include it in the `Authorization` header: `Bearer {token}`
+                
+                ## Rate Limiting
+                - Auth endpoints: 10 requests/minute per IP
+                - Upload endpoints: 20 burst, 2/second refill per IP
+                - General endpoints: 100 requests/minute per IP
+                - Client endpoints: 200 requests/minute per IP
+                """,
+                Contact = new()
+                {
+                    Name = "Mimre Support",
+                    Email = "monderojm.dev@gmail.com"
+                }
+            };
+
+            document.Components ??= new();
+            document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+            document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Enter your JWT token obtained from /api/auth/login"
+            };
+
+            return Task.CompletedTask;
+        });
+
         options.AddSchemaTransformer((schema, context, ct) =>
         {
-            if (context.JsonTypeInfo.Type == typeof(Guid) ||
-                context.JsonTypeInfo.Type == typeof(Guid?))
+            var type = context.JsonTypeInfo.Type;
+            if (type == typeof(Guid) || type == typeof(Guid?))
             {
                 schema.Type = JsonSchemaType.String;
                 schema.Format = "uuid";
@@ -130,6 +168,11 @@ try
         {
             options.Title = "Mimre API";
             options.Theme = ScalarTheme.Purple;
+            options.DefaultHttpClient = new(ScalarTarget.CSharp, ScalarClient.HttpClient);
+            options.Authentication = new ScalarAuthenticationOptions
+            {
+                PreferredSecuritySchemes = ["Bearer"]
+            };
         });
     }
 

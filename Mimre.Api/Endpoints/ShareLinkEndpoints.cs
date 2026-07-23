@@ -24,13 +24,17 @@ public static class ShareLinkEndpoints
         {
             var result = await sender.Send(new GetShareLinksByGalleryQuery(galleryId, page, pageSize));
             return Results.Ok(result);
-        });
+        })
+        .WithName("GetShareLinksByGallery")
+        .WithSummary("Get all share links for a gallery");
 
         group.MapPost("/", async (CreateShareLinkCommand command, ISender sender, CurrentUserService currentUser) =>
         {
             var result = await sender.Send(command with { UserId = currentUser.UserId });
             return Results.Created($"/api/share-links/{result.Id}", result);
-        });
+        })
+        .WithName("CreateShareLink")
+        .WithSummary("Create a new share link for a gallery");
 
         app.MapPost("/api/client/{token}/verify", async (string token, VerifyGalleryPasswordCommand command, ISender sender) =>
         {
@@ -39,13 +43,16 @@ public static class ShareLinkEndpoints
         })
         .WithTags("Client")
         .WithName("VerifyGalleryPassword")
-        .WithSummary("Verify a gallery password for client access");
+        .WithSummary("Verify a gallery password for client access")
+        .AllowAnonymous();
 
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CurrentUserService currentUser) =>
         {
             await sender.Send(new DeleteShareLinkCommand(id, currentUser.UserId));
             return Results.NoContent();
-        });
+        })
+        .WithName("DeleteShareLink")
+        .WithSummary("Delete a share link");
 
         // Public client-facing route — no auth required, token-gated
         app.MapGet("/api/client/{token}", async (string token, ISender sender) =>
@@ -54,6 +61,9 @@ public static class ShareLinkEndpoints
             return Results.Ok(result);
         })
         .WithTags("Client")
-        .RequireRateLimiting(RateLimitingPolicies.Client);
+        .RequireRateLimiting(RateLimitingPolicies.Client)
+        .WithName("GetGalleryByToken")
+        .WithSummary("Get a published gallery via share link token")
+        .AllowAnonymous();
     }
 }
