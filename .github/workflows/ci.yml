@@ -25,10 +25,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore Mimre.sln
+        run: dotnet restore Mimre.slnx
 
       - name: Build solution
-        run: dotnet build Mimre.sln --configuration Release --no-restore
+        run: dotnet build Mimre.slnx --configuration Release --no-restore
 
       - name: Verify API publishes successfully
         run: dotnet publish Mimre.Api/Mimre.Api.csproj --configuration Release --no-build
