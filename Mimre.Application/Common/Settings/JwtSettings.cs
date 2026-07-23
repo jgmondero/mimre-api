@@ -1,4 +1,4 @@
-﻿namespace Mimre.Infrastructure.Auth;
+﻿namespace Mimre.Application.Common.Settings;
 
 public class JwtSettings
 {
@@ -6,4 +6,5 @@ public class JwtSettings
     public string Issuer { get; init; } = default!;
     public string Audience { get; init; } = default!;
     public int AccessTokenExpiryMinutes { get; init; } = 15;
+    public int RefreshTokenExpiryDays { get; init; } = 7;
 }

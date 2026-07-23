@@ -12,6 +12,7 @@ public class User : AuditableEntity
     public long StorageUsedBytes { get; private set; }
 
     public ICollection<Gallery> Galleries { get; private set; } = [];
+    public ICollection<RefreshToken> RefreshTokens { get; private set; } = [];
 
     private User() { }
 

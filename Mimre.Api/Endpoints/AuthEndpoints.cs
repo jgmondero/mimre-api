@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Mimre.Api.RateLimiting;
 using Mimre.Application.Features.Auth.Commands.Login;
+using Mimre.Application.Features.Auth.Commands.RefreshToken;
 using Mimre.Application.Features.Auth.Commands.Register;
 
 namespace Mimre.Api.Endpoints;
@@ -31,11 +32,21 @@ public static class AuthEndpoints
             return Results.Ok(new
             {
                 accessToken = result.AccessToken,
+                refreshToken = result.RefreshToken,
                 user = result.User
             });
         })
         .WithName("Login")
-        .WithSummary("Login and receive an access token")
+        .WithSummary("Login and receive JWT tokens")
+        .AllowAnonymous();
+
+        group.MapPost("/refresh", async (RefreshTokenCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command);
+            return Results.Ok(result);
+        })
+        .WithName("RefreshToken")
+        .WithSummary("Refresh an expired access token")
         .AllowAnonymous();
     }
 }

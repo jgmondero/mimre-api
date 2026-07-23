@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -8,14 +9,14 @@ using Mimre.Api.Middleware;
 using Mimre.Api.RateLimiting;
 using Mimre.Api.Services;
 using Mimre.Application;
+using Mimre.Application.Common.Settings;
 using Mimre.Infrastructure;
-using Mimre.Infrastructure.Auth;
 using Mimre.Infrastructure.Persistence;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Text;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
@@ -69,6 +70,7 @@ try
     builder.Services.ConfigureHttpJsonOptions(options =>
     {
         options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
     builder.Services.AddMimreRateLimiting();
 

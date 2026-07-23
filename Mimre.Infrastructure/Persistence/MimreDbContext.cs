@@ -12,6 +12,7 @@ public class MimreDbContext(DbContextOptions<MimreDbContext> options) : DbContex
     public DbSet<Photo> Photos => Set<Photo>();
     public DbSet<ShareLink> ShareLinks => Set<ShareLink>();
     public DbSet<DownloadLog> DownloadLogs => Set<DownloadLog>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

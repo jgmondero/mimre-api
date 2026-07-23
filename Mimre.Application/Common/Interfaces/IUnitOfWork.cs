@@ -9,6 +9,7 @@ public interface IUnitOfWork
     IAlbumRepository Albums { get; }
     IPhotoRepository Photos { get; }
     IShareLinkRepository ShareLinks { get; }
+    IRefreshTokenRepository RefreshTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
     IEnumerable<object> GetTrackedEntities();

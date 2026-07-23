@@ -9,13 +9,15 @@ public class UnitOfWork(
     IGalleryRepository galleries,
     IAlbumRepository albums,
     IPhotoRepository photos,
-    IShareLinkRepository shareLinks) : IUnitOfWork
+    IShareLinkRepository shareLinks,
+    IRefreshTokenRepository refreshTokens) : IUnitOfWork
 {
     public IUserRepository Users => users;
     public IGalleryRepository Galleries => galleries;
     public IAlbumRepository Albums => albums;
     public IPhotoRepository Photos => photos;
     public IShareLinkRepository ShareLinks => shareLinks;
+    public IRefreshTokenRepository RefreshTokens => refreshTokens;
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);

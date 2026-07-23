@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Mimre.Application.Common.Settings;
 using Mimre.Domain.Entities;
 using Mimre.Domain.Interfaces.Services;
 using System.IdentityModel.Tokens.Jwt;
